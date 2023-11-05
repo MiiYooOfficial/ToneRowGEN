@@ -8,7 +8,7 @@
 
 sf::Int16* convertRowToSamples(int* row, double speed, double volume) {
     sf::SoundBuffer buffer;
-    sf::Int16* samplesArray = new sf::Int16[SAMPLES / speed];
+    sf::Int16* samplesArray = new sf::Int16[int(SAMPLES / speed)];
 
     int sampleIndex = 0;
     for (int toneIndex = 0; toneIndex < NUM_TONES; toneIndex++) {
