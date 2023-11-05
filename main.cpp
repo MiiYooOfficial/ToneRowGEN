@@ -139,7 +139,7 @@ int main() {
                 // bottom section of screen
                 else if (mousePosition.y > 825 && mousePosition.y < 975) {
                     if (mousePosition.x > 675 && mousePosition.x < 1245) { // save current tone row
-                        saveFile(primeRow, retrogradeRow, inversionRow, retrogradeInversionRow);
+                        saveAsFile(primeRow, retrogradeRow, inversionRow, retrogradeInversionRow);
                     }
                 }
             }

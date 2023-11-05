@@ -63,7 +63,7 @@ void invertRow(int* resultingRow, int* originalRow) {
 }
 
 
-void saveFile(int* primeRow, int* retrogradeRow, int* inversionRow, int* retrogradeInversionRow) {
+void saveAsFile(int* primeRow, int* retrogradeRow, int* inversionRow, int* retrogradeInversionRow) {
     std::ofstream toneRows("ToneRows.txt");
 
     toneRows << "Tone rows in pitch-class integer notation\n";
