@@ -194,13 +194,13 @@ int main() {
                         if (arrowCounter < RETROGRADE_INVERSION_KEY)
                             arrowCounter++;
                         else
-                            arrowCounter = 1;
+                            arrowCounter = PRIME_KEY;
                     }
                     else { // switch to the previous transformation of the current row
                         if (arrowCounter > PRIME_KEY)
                             arrowCounter--;
                         else
-                            arrowCounter = 4;
+                            arrowCounter = RETROGRADE_INVERSION_KEY;
                     }
 
                     switch (arrowCounter) { // determine which transformation of the current row user is on
