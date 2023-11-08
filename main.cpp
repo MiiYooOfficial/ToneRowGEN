@@ -188,7 +188,6 @@ int main() {
                     }
                 }
                 
-
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
                     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) { // switch to next transformation of the current row
                         if (arrowCounter < RETROGRADE_INVERSION_KEY)
@@ -196,14 +195,14 @@ int main() {
                         else
                             arrowCounter = PRIME_KEY;
                     }
-                    else { // switch to the previous transformation of the current row
+                    else { // switch to previous transformation of the current row
                         if (arrowCounter > PRIME_KEY)
                             arrowCounter--;
                         else
                             arrowCounter = RETROGRADE_INVERSION_KEY;
                     }
 
-                    switch (arrowCounter) { // determine which transformation of the current row user is on
+                    switch (arrowCounter) { // play new transformation of the current row
                         case PRIME_KEY:
                             applicationScreen.loadFromFile("UI/prime.png");
                             buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
