@@ -81,4 +81,4 @@ void saveAsFile(int* primeRow, int* retrogradeRow, int* inversionRow, int* retro
 // arguments: an option variable indicating which type of notation is to be used (1 for pitch-class integer notation and 2 for letter notation),
 // the row to be written as an array of integers, the file the row will be written to (passed by reference)
 // returns nothing
-void writeRowToFile(int option, int* row, std::ofstream& file);
+void writeRowToFile(int option, int* row, std::ofstream &file);
