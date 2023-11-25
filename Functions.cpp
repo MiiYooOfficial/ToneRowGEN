@@ -1,10 +1,41 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <random>
+#include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
 #include "Globals.h"
 #include "Functions.h"
+
+void loadTexture(sf::Texture &applicationScreen, int transformationNum, bool favorConsonance, bool enhanceConsonance) {
+    std::string texturePath = "UI";
+
+    if (favorConsonance)
+        texturePath.append("/consonance");
+    if (enhanceConsonance)
+        texturePath.append("/enhance");
+
+    switch (transformationNum) {
+        case NONE:
+            texturePath.append("/default.png");
+            break;
+        case PRIME_KEY:
+            texturePath.append("/prime.png");
+            break;
+        case RETROGRADE_KEY:
+            texturePath.append("/retrograde.png");
+            break;
+        case INVERSION_KEY:
+            texturePath.append("/inversion.png");
+            break;
+        case RETROGRADE_INVERSION_KEY:
+            texturePath.append("/retrograde_inversion.png");
+            break;
+    }
+
+    applicationScreen.loadFromFile(texturePath);
+}
 
 sf::Int16* convertRowToSamples(int* row, double speed, double volume) {
     sf::SoundBuffer buffer;
@@ -22,6 +53,144 @@ sf::Int16* convertRowToSamples(int* row, double speed, double volume) {
     }
 
     return samplesArray;
+}
+
+void generateRow(int* toneRow, bool favorConsonance, bool enhanceConsonance) {
+    if (favorConsonance) {
+        wipeToneRow(toneRow);
+        toneRow[0] = generateRandomTone();
+
+        for (int rowIndex = 1; rowIndex < NUM_TONES; rowIndex++) {
+            if (enhanceConsonance) {
+                int chordQuality[2] = { MAJOR, MINOR };
+                int chordPosition[3] = { ROOT, FIRST_INVERSION, SECOND_INVERSION };
+
+                std::random_shuffle(&chordQuality[0], &chordQuality[2]);
+                std::random_shuffle(&chordPosition[0], &chordPosition[3]);
+
+                bool chordSuccessfullyBuilt = buildChord(toneRow, rowIndex, chordQuality[0], chordPosition);
+                if (!chordSuccessfullyBuilt)
+                    chordSuccessfullyBuilt = buildChord(toneRow, rowIndex, chordQuality[1], chordPosition);
+
+                if (!chordSuccessfullyBuilt) { // the enhanceConsonance algorithm is no longer viable; switch to the favorConsonance algorithm
+                    rowIndex--;
+                    enhanceConsonance = false;
+                }
+            }
+            else {
+                bool notePlaced = false;
+                int consonantIntervals[6] = { 3, 4, 5, 7, 8, 9 };
+                int intervalDirections[2] = { UP, DOWN };
+
+                std::random_shuffle(&consonantIntervals[0], &consonantIntervals[6]);
+                std::random_shuffle(&intervalDirections[0], &intervalDirections[2]);
+
+                for (int intervalIterator = 0; intervalIterator < sizeof(consonantIntervals) / sizeof(int); intervalIterator++) {
+                    int toneOne = toneRow[rowIndex - 1] + (consonantIntervals[intervalIterator] * intervalDirections[0]);
+                    int toneTwo = toneRow[rowIndex - 1] + (consonantIntervals[intervalIterator] * intervalDirections[1]);
+
+                    if (isToneInBound(toneOne) && !isToneAlreadyUsed(toneOne, toneRow)) {
+                        toneRow[rowIndex] = toneOne;
+                        notePlaced = true;
+                        break;
+                    }
+                    else if (isToneInBound(toneTwo) && !isToneAlreadyUsed(toneTwo, toneRow)) {
+                        toneRow[rowIndex] = toneTwo;
+                        notePlaced = true;
+                        break;
+                    }
+                }
+                if (!notePlaced) { // as a last-ditch effort, default to using the first available tone regardless of the ensuing interval
+                    toneRow[rowIndex] = findFirstMissingTone(toneRow);
+                }
+            }
+        }
+    }
+    else {
+        std::random_shuffle(&toneRow[0], &toneRow[NUM_TONES]);
+    }
+}
+
+void wipeToneRow(int* toneRow) {
+    for (int i = 0; i < NUM_TONES; i++)
+        toneRow[i] = -1;
+}
+
+int generateRandomTone() {
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist12(0, NUM_TONES - 1);
+
+    return dist12(rng);
+}
+
+bool buildChord(int* toneRow, int &rowIndex, int chordQuality, int* chordPosition) {
+    bool chordBuiltSuccessfully = false;
+
+    for (int positionIterator = 0; positionIterator < 3; positionIterator++) {
+        int secondNote, thirdNote;
+
+        if (chordPosition[positionIterator] == ROOT) {
+            chordQuality == MAJOR ? secondNote = toneRow[rowIndex - 1] + 4 : secondNote = toneRow[rowIndex - 1] + 3;
+            thirdNote = toneRow[rowIndex - 1] + 7;
+        }
+        else if (chordPosition[positionIterator] == FIRST_INVERSION) {
+            chordQuality == MAJOR ? secondNote = toneRow[rowIndex - 1] + 3 : secondNote = toneRow[rowIndex - 1] + 4;
+            chordQuality == MAJOR ? thirdNote = toneRow[rowIndex - 1] + 8 : thirdNote = toneRow[rowIndex - 1] + 9;
+        }
+        else {
+            secondNote = toneRow[rowIndex - 1] + 5;
+            chordQuality == MAJOR ? thirdNote = toneRow[rowIndex - 1] + 9 : thirdNote = toneRow[rowIndex - 1] + 8;
+        }
+
+        if (secondNote > 11)
+            secondNote -= 12;
+        if (thirdNote > 11)
+            thirdNote -= 12;
+
+        if (!isToneAlreadyUsed(secondNote, toneRow)) {
+            toneRow[rowIndex] = secondNote;
+            chordBuiltSuccessfully = true;
+        }
+        if (!isToneAlreadyUsed(thirdNote, toneRow)) {
+            if (chordBuiltSuccessfully)
+                rowIndex++;
+            toneRow[rowIndex] = thirdNote; // note that this index will never be out of range
+            chordBuiltSuccessfully = true;
+        }
+
+        if (chordBuiltSuccessfully)
+            break;
+    }
+
+    return chordBuiltSuccessfully;
+}
+
+bool isToneInBound(int tone) {
+    if (tone < 0 || tone > 11)
+        return false;
+
+    return true;
+}
+
+bool isToneAlreadyUsed(int tone, int* toneRow) {
+    for (int i = 0; i < NUM_TONES; i++)
+        if (toneRow[i] == tone)
+            return true;
+
+    return false;
+}
+
+int findFirstMissingTone(int* toneRow) {
+    int hashmap[NUM_TONES] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    for (int i = 0; i < NUM_TONES; i++)
+        if (toneRow[i] != -1)
+            hashmap[toneRow[i]] = 1;
+
+    for (int i = 0; i < NUM_TONES; i++)
+        if (hashmap[i] == 0)
+            return i;
 }
 
 void generateTransformations(int* primeRow, int* retrogradeRow, int* inversionRow, int* retrogradeInversionRow) {

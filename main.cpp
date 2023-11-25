@@ -9,7 +9,9 @@
 // user-controlled variables
 double speed = 2; // in notes per second
 double volume = 0.3; // a value between 0 and 1
-int arrowCounter = PRIME_KEY; // the current transformation of the tone row
+int arrowCounter = NONE; // the current transformation of the tone row
+bool favorConsonance = false; // toggle for AI-assisted consonance-enforced tone row generation
+bool enhanceConsonance = false; // toggle for increased AI-assisted consonance
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "ToneRowGEN", sf::Style::Close | sf::Style::Titlebar);
@@ -43,7 +45,6 @@ int main() {
                 // top section of screen
                 if (mousePosition.y > 105 && mousePosition.y < 235) {
                     if (mousePosition.x > 105 && mousePosition.x < 500) { // play prime row
-                        applicationScreen.loadFromFile("UI/prime.png");
                         arrowCounter = PRIME_KEY;
                         buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                         sound.setBuffer(buffer);
@@ -51,7 +52,6 @@ int main() {
                     }
 
                     else if (mousePosition.x > 545 && mousePosition.x < 940) { // play retrograde row
-                        applicationScreen.loadFromFile("UI/retrograde.png");
                         arrowCounter = RETROGRADE_KEY;
                         buffer.loadFromSamples(convertRowToSamples(retrogradeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                         sound.setBuffer(buffer);
@@ -59,7 +59,6 @@ int main() {
                     }
 
                     else if (mousePosition.x > 980 && mousePosition.x < 1375) { // play inversion row
-                        applicationScreen.loadFromFile("UI/inversion.png");
                         arrowCounter = INVERSION_KEY;
                         buffer.loadFromSamples(convertRowToSamples(inversionRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                         sound.setBuffer(buffer);
@@ -67,12 +66,13 @@ int main() {
                     }
 
                     else if (mousePosition.x > 1420 && mousePosition.x < 1815) { // play retrograde inversion row
-                        applicationScreen.loadFromFile("UI/retrograde_inversion.png");
                         arrowCounter = RETROGRADE_INVERSION_KEY;
                         buffer.loadFromSamples(convertRowToSamples(retrogradeInversionRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                         sound.setBuffer(buffer);
                         sound.play();
                     }
+
+                    loadTexture(applicationScreen, arrowCounter, favorConsonance, enhanceConsonance);
                 }
 
                 // middle section of screen
@@ -109,29 +109,33 @@ int main() {
                             for (int toneIndex = 0; toneIndex < (sizeof(primeRow) / sizeof(int)); toneIndex++) // save current prime row in case user wants to go back
                                 previousPrimeRow[toneIndex] = primeRow[toneIndex];
 
-                            std::random_shuffle(&primeRow[0], &primeRow[NUM_TONES]); // create new prime row
-                            arrowCounter = PRIME_KEY; // reset arrow counter
+                            generateRow(primeRow, favorConsonance, enhanceConsonance); // create new prime
                             generateTransformations(primeRow, retrogradeRow, inversionRow, retrogradeInversionRow); // generate ensuing retrograde, inversion and retrograde inversion rows
 
                             // play prime transformation of new row
-                            applicationScreen.loadFromFile("UI/prime.png");
+                            arrowCounter = PRIME_KEY; // reset arrow counter
+                            loadTexture(applicationScreen, arrowCounter, favorConsonance, enhanceConsonance);
                             buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                         }
 
-                        else if (mousePosition.y > 575) { // return to previous tone row
-                            for (int toneIndex = 0; toneIndex < (sizeof(primeRow) / sizeof(int)); toneIndex++) // restore previous prime row
-                                primeRow[toneIndex] = previousPrimeRow[toneIndex];
+                        else if (mousePosition.y > 590) {
+                            if (mousePosition.x > 1270 && mousePosition.x < 1320) {
+                                if (mousePosition.y < 640) { // toggle consonance-enforcement
+                                    favorConsonance = !favorConsonance;
 
-                            arrowCounter = PRIME_KEY; // reset arrow counter
-                            generateTransformations(primeRow, retrogradeRow, inversionRow, retrogradeInversionRow); // generate ensuing retrograde, inversion and retrograde inversion rows
+                                    if (!favorConsonance)
+                                        enhanceConsonance = false;
+                                }
+                                else if (mousePosition.y > 670) { // toggle enhanced consonance-enforcement
+                                    if (favorConsonance) {
+                                        enhanceConsonance = !enhanceConsonance;
+                                    }
+                                }
 
-                            // play the prime transformation of the new row
-                            applicationScreen.loadFromFile("UI/prime.png");
-                            buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
-                            sound.setBuffer(buffer);
-                            sound.play();
+                                loadTexture(applicationScreen, arrowCounter, favorConsonance, enhanceConsonance);
+                            }
                         }
                     }
                 }
@@ -147,32 +151,33 @@ int main() {
             // keyboard shortcuts
             if (evt.type == sf::Event::KeyPressed) {
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) { // replay the current row
+                    if (arrowCounter == NONE) // initialize arrowCounter if necessary
+                        arrowCounter = PRIME_KEY;
+
                     switch (arrowCounter) { // determine which transformation of the current row user is on
                         case PRIME_KEY:
-                            applicationScreen.loadFromFile("UI/prime.png");
                             buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                         case RETROGRADE_KEY:
-                            applicationScreen.loadFromFile("UI/retrograde.png");
                             buffer.loadFromSamples(convertRowToSamples(retrogradeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                         case INVERSION_KEY:
-                            applicationScreen.loadFromFile("UI/inversion.png");
                             buffer.loadFromSamples(convertRowToSamples(inversionRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                         case RETROGRADE_INVERSION_KEY:
-                            applicationScreen.loadFromFile("UI/retrograde_inversion.png");
                             buffer.loadFromSamples(convertRowToSamples(retrogradeInversionRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                     }
+
+                    loadTexture(applicationScreen, arrowCounter, favorConsonance, enhanceConsonance);
                 }
 
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
@@ -187,8 +192,11 @@ int main() {
                         }
                     }
                 }
-                
+
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+                    if (arrowCounter == NONE) // initialize arrowCounter if necessary
+                        arrowCounter = PRIME_KEY;
+
                     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) { // switch to next transformation of the current row
                         if (arrowCounter < RETROGRADE_INVERSION_KEY)
                             arrowCounter++;
@@ -204,42 +212,40 @@ int main() {
 
                     switch (arrowCounter) { // play new transformation of the current row
                         case PRIME_KEY:
-                            applicationScreen.loadFromFile("UI/prime.png");
                             buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                         case RETROGRADE_KEY:
-                            applicationScreen.loadFromFile("UI/retrograde.png");
                             buffer.loadFromSamples(convertRowToSamples(retrogradeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                         case INVERSION_KEY:
-                            applicationScreen.loadFromFile("UI/inversion.png");
                             buffer.loadFromSamples(convertRowToSamples(inversionRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                         case RETROGRADE_INVERSION_KEY:
-                            applicationScreen.loadFromFile("UI/retrograde_inversion.png");
                             buffer.loadFromSamples(convertRowToSamples(retrogradeInversionRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                             sound.setBuffer(buffer);
                             sound.play();
                             break;
                     }
+
+                    loadTexture(applicationScreen, arrowCounter, favorConsonance, enhanceConsonance);
                 }
 
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) { // generate new prime row (and subsequent transformations)
                     for (int toneIndex = 0; toneIndex < (sizeof(primeRow) / sizeof(int)); toneIndex++) // save current prime row in case user wants to go back
                         previousPrimeRow[toneIndex] = primeRow[toneIndex];
 
-                    std::random_shuffle(&primeRow[0], &primeRow[NUM_TONES]); // create new prime row
-                    arrowCounter = PRIME_KEY; // reset arrow counter
+                    generateRow(primeRow, favorConsonance, enhanceConsonance); // create new prime row
                     generateTransformations(primeRow, retrogradeRow, inversionRow, retrogradeInversionRow); // generate ensuing retrograde, inversion and retrograde inversion rows
 
                     // play the prime transformation of the new row
-                    applicationScreen.loadFromFile("UI/prime.png");
+                    arrowCounter = PRIME_KEY; // reset arrow counter
+                    loadTexture(applicationScreen, arrowCounter, favorConsonance, enhanceConsonance);
                     buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                     sound.setBuffer(buffer);
                     sound.play();
@@ -253,7 +259,7 @@ int main() {
                     generateTransformations(primeRow, retrogradeRow, inversionRow, retrogradeInversionRow); // generate ensuing retrograde, inversion and retrograde inversion rows
 
                     // play the prime transformation of the new row
-                    applicationScreen.loadFromFile("UI/prime.png");
+                    loadTexture(applicationScreen, arrowCounter, favorConsonance, enhanceConsonance);
                     buffer.loadFromSamples(convertRowToSamples(primeRow, speed, volume), SAMPLES / speed, 1, SAMPLE_RATE);
                     sound.setBuffer(buffer);
                     sound.play();
