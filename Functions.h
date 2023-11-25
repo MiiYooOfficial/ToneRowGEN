@@ -74,7 +74,7 @@ void invertRow(int* resultingRow, int* originalRow);
 // saves all transformations of the current tone row as a text file in both pitch-class integer notation and letter notation
 // arguments: the prime row array, the retrograde row array, the inversion row array, the retrograde inversion row array
 // returns nothing
-// note that the resulting text file containing the tone row and its transformations is created inside the fuction
+// note that the resulting text file containing the tone row and its transformations is created inside the function
 void saveAsFile(int* primeRow, int* retrogradeRow, int* inversionRow, int* retrogradeInversionRow);
 
 // writes a given tone row as a single line to a given text file in either pitch-class integer notation or letter notation
