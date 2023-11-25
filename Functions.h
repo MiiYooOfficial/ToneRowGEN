@@ -32,6 +32,11 @@ void wipeToneRow(int* toneRow);
 // returns the randomly generated tone in pitch-class integer notation
 int generateRandomTone();
 
+// builds a diatonic triad based on the last tone in the row so far given the desired quality and positions of the ensuing chord
+// arguments: the array containing the tone row, the index of the current tone in the row,
+// the desired quality of the chord, an array containing the three possible chord positions in the desired order for the algorithm to attempt
+// returns true if a chord was successfully built using either of the three chord positions (i.e., at least one tone was available for use)
+// note that the tone row index is passed by reference so it can be automatically updated if necessary
 bool buildChord(int* toneRow, int &rowIndex, int chordQuality, int* chordPosition);
 
 // checks if a tone is within the confines of an octave
@@ -44,6 +49,9 @@ bool isToneInBound(int tone);
 // returns true if the tone was found in the tone row, false otherwise
 bool isToneAlreadyUsed(int tone, int* toneRow);
 
+// finds the first missing tone in a given tone row
+// arguments: the array containing the tone row
+// returns the first missing tone from the row in pitch-class integer notation
 int findFirstMissingTone(int* toneRow);
 
 // generates all three transformations based on a give prime row (i.e., the retrograde, inversion and retrograde inversion rows)
