@@ -20,10 +20,24 @@ const unsigned SAMPLE_RATE = 44100;
 const int VOLUME_FACTOR = 32767;
 
 // integer equivalents for arrow keys
+const int NONE = 0;
 const int PRIME_KEY = 1;
 const int RETROGRADE_KEY = 2;
 const int INVERSION_KEY = 3;
 const int RETROGRADE_INVERSION_KEY = 4;
+
+// integer equivalents for chord quality
+const int MAJOR = 1;
+const int MINOR = -1;
+
+// integer equivalents for chord positions
+const int ROOT = 0;
+const int FIRST_INVERSION = 1;
+const int SECOND_INVERSION = 2;
+
+// integer equivalents for interval directions
+const int UP = 1;
+const int DOWN = -1;
 
 // integer options when writing tone rows to a file
 const int PITCH_CLASS_NOTATION = 1;
