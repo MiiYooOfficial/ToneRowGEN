@@ -56,6 +56,9 @@ sf::Int16* convertRowToSamples(int* row, double speed, double volume) {
 }
 
 void generateRow(int* toneRow, bool favorConsonance, bool enhanceConsonance) {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
     if (favorConsonance) {
         wipeToneRow(toneRow);
         toneRow[0] = generateRandomTone();
@@ -65,8 +68,8 @@ void generateRow(int* toneRow, bool favorConsonance, bool enhanceConsonance) {
                 int chordQuality[2] = { MAJOR, MINOR };
                 int chordPosition[3] = { ROOT, FIRST_INVERSION, SECOND_INVERSION };
 
-                std::random_shuffle(&chordQuality[0], &chordQuality[2]);
-                std::random_shuffle(&chordPosition[0], &chordPosition[3]);
+                std::shuffle(&chordQuality[0], &chordQuality[2], g);
+                std::shuffle(&chordPosition[0], &chordPosition[3], g);
 
                 bool chordSuccessfullyBuilt = buildChord(toneRow, rowIndex, chordQuality[0], chordPosition);
                 if (!chordSuccessfullyBuilt)
@@ -82,8 +85,8 @@ void generateRow(int* toneRow, bool favorConsonance, bool enhanceConsonance) {
                 int consonantIntervals[6] = { 3, 4, 5, 7, 8, 9 };
                 int intervalDirections[2] = { UP, DOWN };
 
-                std::random_shuffle(&consonantIntervals[0], &consonantIntervals[6]);
-                std::random_shuffle(&intervalDirections[0], &intervalDirections[2]);
+                std::shuffle(&consonantIntervals[0], &consonantIntervals[6], g);
+                std::shuffle(&intervalDirections[0], &intervalDirections[2], g);
 
                 for (int intervalIterator = 0; intervalIterator < sizeof(consonantIntervals) / sizeof(int); intervalIterator++) {
                     int toneOne = toneRow[rowIndex - 1] + (consonantIntervals[intervalIterator] * intervalDirections[0]);
@@ -107,7 +110,7 @@ void generateRow(int* toneRow, bool favorConsonance, bool enhanceConsonance) {
         }
     }
     else {
-        std::random_shuffle(&toneRow[0], &toneRow[NUM_TONES]);
+        std::shuffle(&toneRow[0], &toneRow[NUM_TONES], g);
     }
 }
 
