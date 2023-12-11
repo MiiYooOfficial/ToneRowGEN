@@ -11,10 +11,11 @@
 void loadTexture(sf::Texture &applicationScreen, int transformationNum, bool favorConsonance, bool enhanceConsonance) {
     std::string texturePath = "UI";
 
-    if (favorConsonance)
+    if (favorConsonance) {
         texturePath.append("/consonance");
-    if (enhanceConsonance)
-        texturePath.append("/enhance");
+        if (enhanceConsonance)
+            texturePath.append("/enhance");
+    }
 
     switch (transformationNum) {
         case NONE:
@@ -89,19 +90,18 @@ void generateRow(int* toneRow, bool favorConsonance, bool enhanceConsonance) {
                 std::shuffle(&intervalDirections[0], &intervalDirections[2], g);
 
                 for (int intervalIterator = 0; intervalIterator < sizeof(consonantIntervals) / sizeof(int); intervalIterator++) {
-                    int toneOne = toneRow[rowIndex - 1] + (consonantIntervals[intervalIterator] * intervalDirections[0]);
-                    int toneTwo = toneRow[rowIndex - 1] + (consonantIntervals[intervalIterator] * intervalDirections[1]);
+                    for (int directionIterator = 0; directionIterator < sizeof(intervalDirections) / sizeof(int); directionIterator++) {
+                        int tone = toneRow[rowIndex - 1] + (consonantIntervals[intervalIterator] * intervalDirections[directionIterator]);
 
-                    if (isToneInBound(toneOne) && !isToneAlreadyUsed(toneOne, toneRow)) {
-                        toneRow[rowIndex] = toneOne;
-                        notePlaced = true;
-                        break;
+                        if (isToneInBound(tone) && !isToneAlreadyUsed(tone, toneRow)) {
+                            toneRow[rowIndex] = tone;
+                            notePlaced = true;
+                            break;
+                        }
                     }
-                    else if (isToneInBound(toneTwo) && !isToneAlreadyUsed(toneTwo, toneRow)) {
-                        toneRow[rowIndex] = toneTwo;
-                        notePlaced = true;
+
+                    if (notePlaced)
                         break;
-                    }
                 }
                 if (!notePlaced) { // as a last-ditch effort, default to using the first available tone regardless of the ensuing interval
                     toneRow[rowIndex] = findFirstMissingTone(toneRow);
@@ -203,37 +203,23 @@ void generateTransformations(int* primeRow, int* retrogradeRow, int* inversionRo
 }
 
 void reverseRow(int* resultingRow, int* originalRow) {
-    int forwardIterator = 0;
-    for (int reverseIterator = NUM_TONES - 1; reverseIterator >= 0; reverseIterator--) {
-        resultingRow[forwardIterator] = originalRow[reverseIterator];
-        forwardIterator++;
-    }
+    for (int index = 0; index < NUM_TONES; index++)
+        resultingRow[index] = originalRow[NUM_TONES - 1 - index];
 }
 
 void invertRow(int* resultingRow, int* originalRow) {
     resultingRow[0] = originalRow[0];
 
     for (int index = 1; index < NUM_TONES; index++) {
-        resultingRow[index] = resultingRow[index - 1];
-        int interval = std::abs(originalRow[index] - originalRow[index - 1]);
+        int interval = originalRow[index] - originalRow[index - 1];
+        resultingRow[index] = resultingRow[index - 1] + (interval * -1);
 
-        for (int intervalCounter = 0; intervalCounter < interval; intervalCounter++) {
-            if (originalRow[index] - originalRow[index - 1] > 0) { // inverted interval will be descending
-                if (resultingRow[index] > 0)
-                    resultingRow[index]--;
-                else
-                    resultingRow[index] = 11;
-            }
-            else { // inverted interval will be ascending
-                if (resultingRow[index] < NUM_TONES - 1)
-                    resultingRow[index]++;
-                else
-                    resultingRow[index] = 0;
-            }
-        }
+        if (resultingRow[index] < 0)
+            resultingRow[index] += 12;
+        else if (resultingRow[index] > 11)
+            resultingRow[index] -= 12;
     }
 }
-
 
 void saveAsFile(int* primeRow, int* retrogradeRow, int* inversionRow, int* retrogradeInversionRow) {
     std::ofstream toneRows("ToneRows.txt");

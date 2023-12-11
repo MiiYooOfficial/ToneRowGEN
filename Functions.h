@@ -63,7 +63,7 @@ void generateTransformations(int* primeRow, int* retrogradeRow, int* inversionRo
 // returns nothing
 void reverseRow(int* resultingRow, int* originalRow);
 
-// inverts the intervals between tones in a given tone row
+// flips the intervals between every tone in a given tone row
 // arguments: the array of tones that will store the inverted tone row, the original tone row to be inverted
 // returns nothing
 // note that the first tone in the resulting row will be identical to that from the original row
