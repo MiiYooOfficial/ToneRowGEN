@@ -66,17 +66,53 @@ void generateRow(int* toneRow, bool favorConsonance, bool enhanceConsonance) {
 
         for (int rowIndex = 1; rowIndex < NUM_TONES; rowIndex++) {
             if (enhanceConsonance) {
-                int chordQuality[2] = { MAJOR, MINOR };
-                int chordPosition[3] = { ROOT, FIRST_INVERSION, SECOND_INVERSION };
+                bool chordBuiltSuccessfully = false;
+                int chordQualities[2] = { MAJOR, MINOR };
+                int chordPositions[3] = { ROOT, FIRST_INVERSION, SECOND_INVERSION };
 
-                std::shuffle(&chordQuality[0], &chordQuality[2], g);
-                std::shuffle(&chordPosition[0], &chordPosition[3], g);
+                std::shuffle(&chordQualities[0], &chordQualities[2], g);
+                std::shuffle(&chordPositions[0], &chordPositions[3], g);
 
-                bool chordSuccessfullyBuilt = buildChord(toneRow, rowIndex, chordQuality[0], chordPosition);
-                if (!chordSuccessfullyBuilt)
-                    chordSuccessfullyBuilt = buildChord(toneRow, rowIndex, chordQuality[1], chordPosition);
+                for (int qualityIterator = 0; qualityIterator < sizeof(chordQualities) / sizeof(int); qualityIterator++) {
+                    for (int positionIterator = 0; positionIterator < sizeof(chordPositions) / sizeof(int); positionIterator++) {
+                        int secondNote, thirdNote;
 
-                if (!chordSuccessfullyBuilt) { // the enhanceConsonance algorithm is no longer viable; switch to the favorConsonance algorithm
+                        if (chordPositions[positionIterator] == ROOT) {
+                            chordQualities[qualityIterator] == MAJOR ? secondNote = toneRow[rowIndex - 1] + 4 : secondNote = toneRow[rowIndex - 1] + 3;
+                            thirdNote = toneRow[rowIndex - 1] + 7;
+                        }
+                        else if (chordPositions[positionIterator] == FIRST_INVERSION) {
+                            chordQualities[qualityIterator] == MAJOR ? secondNote = toneRow[rowIndex - 1] + 3 : secondNote = toneRow[rowIndex - 1] + 4;
+                            chordQualities[qualityIterator] == MAJOR ? thirdNote = toneRow[rowIndex - 1] + 8 : thirdNote = toneRow[rowIndex - 1] + 9;
+                        }
+                        else {
+                            secondNote = toneRow[rowIndex - 1] + 5;
+                            chordQualities[qualityIterator] == MAJOR ? thirdNote = toneRow[rowIndex - 1] + 9 : thirdNote = toneRow[rowIndex - 1] + 8;
+                        }
+
+                        if (secondNote > 11)
+                            secondNote -= 12;
+                        if (thirdNote > 11)
+                            thirdNote -= 12;
+
+                        if (!isToneAlreadyUsed(secondNote, toneRow)) {
+                            toneRow[rowIndex] = secondNote;
+                            chordBuiltSuccessfully = true;
+                        }
+                        if (!isToneAlreadyUsed(thirdNote, toneRow)) {
+                            if (chordBuiltSuccessfully)
+                                rowIndex++;
+                            toneRow[rowIndex] = thirdNote; // note that this index will never be out of range
+                            chordBuiltSuccessfully = true;
+                        }
+
+                        if (chordBuiltSuccessfully)
+                            break;
+                    }
+                    if (chordBuiltSuccessfully)
+                        break;
+                }
+                if (!chordBuiltSuccessfully) { // the enhanceConsonance algorithm is no longer viable; switch to the favorConsonance algorithm
                     rowIndex--;
                     enhanceConsonance = false;
                 }
@@ -125,48 +161,6 @@ int generateRandomTone() {
     std::uniform_int_distribution<std::mt19937::result_type> dist12(0, NUM_TONES - 1);
 
     return dist12(rng);
-}
-
-bool buildChord(int* toneRow, int &rowIndex, int chordQuality, int* chordPosition) {
-    bool chordBuiltSuccessfully = false;
-
-    for (int positionIterator = 0; positionIterator < 3; positionIterator++) {
-        int secondNote, thirdNote;
-
-        if (chordPosition[positionIterator] == ROOT) {
-            chordQuality == MAJOR ? secondNote = toneRow[rowIndex - 1] + 4 : secondNote = toneRow[rowIndex - 1] + 3;
-            thirdNote = toneRow[rowIndex - 1] + 7;
-        }
-        else if (chordPosition[positionIterator] == FIRST_INVERSION) {
-            chordQuality == MAJOR ? secondNote = toneRow[rowIndex - 1] + 3 : secondNote = toneRow[rowIndex - 1] + 4;
-            chordQuality == MAJOR ? thirdNote = toneRow[rowIndex - 1] + 8 : thirdNote = toneRow[rowIndex - 1] + 9;
-        }
-        else {
-            secondNote = toneRow[rowIndex - 1] + 5;
-            chordQuality == MAJOR ? thirdNote = toneRow[rowIndex - 1] + 9 : thirdNote = toneRow[rowIndex - 1] + 8;
-        }
-
-        if (secondNote > 11)
-            secondNote -= 12;
-        if (thirdNote > 11)
-            thirdNote -= 12;
-
-        if (!isToneAlreadyUsed(secondNote, toneRow)) {
-            toneRow[rowIndex] = secondNote;
-            chordBuiltSuccessfully = true;
-        }
-        if (!isToneAlreadyUsed(thirdNote, toneRow)) {
-            if (chordBuiltSuccessfully)
-                rowIndex++;
-            toneRow[rowIndex] = thirdNote; // note that this index will never be out of range
-            chordBuiltSuccessfully = true;
-        }
-
-        if (chordBuiltSuccessfully)
-            break;
-    }
-
-    return chordBuiltSuccessfully;
 }
 
 bool isToneInBound(int tone) {

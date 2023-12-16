@@ -30,13 +30,6 @@ void wipeToneRow(int* toneRow);
 // returns the randomly generated tone in pitch-class integer notation
 int generateRandomTone();
 
-// builds a diatonic triad based on the last tone in the row so far given the desired quality and positions of the ensuing chord
-// arguments: the array containing the tone row, the index of the current tone in the row,
-// the desired quality of the chord, an array containing the three possible chord positions in the desired order for the algorithm to attempt
-// returns true if a chord was successfully built using either of the three chord positions (i.e., at least one tone was available for use)
-// note that the tone row index is passed by reference so it can be automatically updated if necessary
-bool buildChord(int* toneRow, int &rowIndex, int chordQuality, int* chordPosition);
-
 // checks if a tone is within the confines of an octave
 // arguments: the tone to check for (in pitch-class integer notation)
 // returns true if the tone is within bounds, false otherwise
